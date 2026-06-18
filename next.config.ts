@@ -2,6 +2,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Required for Railway/Docker: bundles only necessary files
+  output: 'standalone',
   experimental: {
     reactCompiler: false,
   },

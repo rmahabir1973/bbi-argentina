@@ -55,7 +55,8 @@ export default buildConfig({
 
   editor: lexicalEditor(),
 
-  secret: (process.env.PAYLOAD_SECRET?.trim() || 'fallback-dev-secret-change-in-production-32chars'),
+  // Payload docs: pass the env var directly. If missing, Payload throws at startup — intentional.
+  secret: process.env.PAYLOAD_SECRET || '',
 
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
