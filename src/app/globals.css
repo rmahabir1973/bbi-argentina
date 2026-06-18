@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── BBI Argentina — Global Styles ──────────────────────────────────────── */
+
+@layer base {
+  /* Focus states — WCAG 2.1 AA */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-olive;
+  }
+
+  /* Body defaults */
+  body {
+    @apply text-brand-ink;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-medium leading-tight;
+  }
+
+  h1 {
+    @apply text-display-xl text-brand-earth;
+  }
+
+  h2 {
+    @apply text-display-lg text-brand-earth;
+  }
+
+  h3 {
+    @apply text-display-md text-brand-earth;
+  }
+
+  /* Links — semantic, no underline by default */
+  a {
+    @apply text-brand-olive underline-offset-2 transition-colors duration-150;
+  }
+
+  a:hover {
+    @apply text-brand-earth underline;
+  }
+
+  /* Bold data points — AIO signal */
+  strong {
+    @apply font-semibold text-brand-earth;
+  }
+
+  /* Form elements — WCAG 2.1 AA */
+  label {
+    @apply block text-body-sm font-medium text-brand-earth mb-1;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply w-full rounded border border-brand-slate bg-white px-4 py-3 text-body-md
+           text-brand-ink placeholder-brand-sage/60
+           focus:outline-none focus:ring-2 focus:ring-brand-olive focus:border-brand-olive
+           min-h-tap;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-brand-straw/30 text-brand-earth;
+  }
+}
+
+@layer components {
+  /* Container */
+  .container-site {
+    @apply mx-auto max-w-content px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section spacing */
+  .section {
+    @apply py-section;
+  }
+
+  .section-sm {
+    @apply py-section-sm;
+  }
+
+  /* Primary CTA button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center
+           bg-brand-olive text-brand-limestone
+           rounded-button px-6 py-3
+           text-body-sm font-medium tracking-wide
+           min-h-tap min-w-tap
+           transition-colors duration-150
+           hover:bg-brand-earth
+           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-olive;
+  }
+
+  /* Secondary CTA button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center
+           border border-brand-olive text-brand-olive bg-transparent
+           rounded-button px-6 py-3
+           text-body-sm font-medium tracking-wide
+           min-h-tap min-w-tap
+           transition-colors duration-150
+           hover:bg-brand-olive hover:text-brand-limestone
+           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-olive;
+  }
+
+  /* Text link button */
+  .btn-text {
+    @apply inline-flex items-center text-brand-olive font-medium text-body-sm
+           underline-offset-2 hover:underline transition-colors duration-150
+           min-h-tap;
+  }
+
+  /* Asset card */
+  .card-asset {
+    @apply bg-white rounded-card border border-brand-slate
+           shadow-card hover:shadow-card-hover
+           transition-shadow duration-200
+           overflow-hidden;
+  }
+
+  /* Status indicator pill — colour-blind safe (pattern + colour) */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-tag px-2.5 py-1
+           text-label font-medium tracking-wider uppercase;
+  }
+
+  .status-pill-operational {
+    @apply status-pill bg-brand-verified/10 text-brand-verified
+           border border-brand-verified/20;
+  }
+
+  .status-pill-partial {
+    @apply status-pill bg-brand-partial/10 text-brand-partial
+           border border-brand-partial/20;
+  }
+
+  .status-pill-raw {
+    @apply status-pill bg-brand-raw/10 text-brand-raw
+           border border-brand-raw/20;
+  }
+
+  .status-pill-offmarket {
+    @apply status-pill bg-brand-offmarket/10 text-brand-offmarket
+           border border-brand-offmarket/20;
+  }
+
+  /* Strategic rationale tag */
+  .tag-strategic {
+    @apply inline-block rounded-tag px-2.5 py-1 text-label font-medium
+           bg-brand-olive/10 text-brand-olive border border-brand-olive/20
+           tracking-wider uppercase;
+  }
+
+  /* Due Diligence Snapshot box */
+  .dd-snapshot {
+    @apply rounded-card border border-brand-slate bg-brand-fog
+           p-6 shadow-callout;
+  }
+
+  /* Platform Integration Footer */
+  .platform-footer {
+    @apply bg-brand-slate rounded-card p-6 mt-8;
+  }
+
+  /* Legal callout */
+  .legal-callout {
+    @apply rounded-card border border-brand-slate bg-brand-fog
+           p-5 text-body-sm text-brand-sage;
+  }
+
+  /* Data grid cell */
+  .data-cell {
+    @apply flex flex-col gap-0.5;
+  }
+
+  .data-cell-label {
+    @apply text-label text-brand-sage uppercase tracking-wider;
+  }
+
+  .data-cell-value {
+    @apply text-body-md font-medium text-brand-earth;
+  }
+
+  /* Section heading */
+  .section-heading {
+    @apply text-display-md font-display font-medium text-brand-earth mb-4;
+  }
+
+  /* Prose body copy — max 3 sentences per paragraph */
+  .body-copy {
+    @apply text-body-md text-brand-ink leading-relaxed;
+  }
+
+  .body-copy p {
+    @apply mb-4 last:mb-0;
+  }
+}
+
+@layer utilities {
+  /* Screen reader only */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+  }
+
+  /* Skip to main content */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4
+           focus:z-50 focus:bg-brand-olive focus:text-white focus:px-4 focus:py-2
+           focus:rounded focus:text-body-sm;
+  }
+}
