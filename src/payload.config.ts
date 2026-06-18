@@ -65,7 +65,8 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI ?? '',
     },
-    push: false, // Use migrations in production
+    // push: true auto-creates tables on first run (safe for initial deploy)
+    push: true,
   }),
 
   email: resendAdapter({
@@ -80,20 +81,28 @@ export default buildConfig({
         media: {
           prefix: 'media',
           generateFileURL: ({ filename: fname }) => {
-            const hostname = process.env.NEXT_PUBLIC_S3_HOSTNAME ?? ''
-            return `${hostname}/media/${fname}`
+            // Support both R2_PUBLIC_URL (Railway) and NEXT_PUBLIC_S3_HOSTNAME
+            const hostname =
+              process.env.R2_PUBLIC_URL ??
+              process.env.NEXT_PUBLIC_S3_HOSTNAME ??
+              ''
+            return hostname ? `${hostname}/media/${fname}` : `/media/${fname}`
           },
         },
       },
-      bucket: process.env.S3_BUCKET ?? '',
+      // Support both R2_BUCKET_NAME (Railway) and S3_BUCKET
+      bucket: process.env.R2_BUCKET_NAME ?? process.env.S3_BUCKET ?? '',
       config: {
         forcePathStyle: true,
         credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
+          accessKeyId:
+            process.env.R2_ACCESS_KEY_ID ?? process.env.S3_ACCESS_KEY_ID ?? '',
+          secretAccessKey:
+            process.env.R2_SECRET_ACCESS_KEY ?? process.env.S3_SECRET_ACCESS_KEY ?? '',
         },
         region: process.env.S3_REGION ?? 'auto',
-        endpoint: process.env.S3_ENDPOINT ?? '',
+        // Support both R2_ENDPOINT (Railway) and S3_ENDPOINT
+        endpoint: process.env.R2_ENDPOINT ?? process.env.S3_ENDPOINT ?? '',
       },
     }),
   ],
@@ -105,12 +114,20 @@ export default buildConfig({
   },
 
   cors: [
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+    // Support both NEXT_PUBLIC_SERVER_URL (Railway) and NEXT_PUBLIC_SITE_URL
+    process.env.NEXT_PUBLIC_SERVER_URL ??
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      'http://localhost:3000',
   ],
 
   csrf: [
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+    process.env.NEXT_PUBLIC_SERVER_URL ??
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      'http://localhost:3000',
   ],
 
-  serverURL: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  serverURL:
+    process.env.NEXT_PUBLIC_SERVER_URL ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    'http://localhost:3000',
 })
