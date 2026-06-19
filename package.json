@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "payload generate:importmap && next build",
     "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "lint": "next lint && eslint src --ext .ts,.tsx --max-warnings 0",
     "lint:content": "node scripts/content-lint.mjs",
