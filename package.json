@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts next build && node -e \"const{cpSync}=require('fs');cpSync('.next/static','.next/standalone/.next/static',{recursive:true});try{cpSync('public','.next/standalone/public',{recursive:true})}catch(e){}\"",
     "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "lint": "next lint && eslint src --ext .ts,.tsx --max-warnings 0",
     "lint:content": "node scripts/content-lint.mjs",
