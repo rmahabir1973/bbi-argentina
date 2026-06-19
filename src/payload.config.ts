@@ -24,10 +24,19 @@ import { Navigation } from './payload/globals/Navigation'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+// ── Runtime env reader ───────────────────────────────────────────────────────
+// IMPORTANT: read via computed access (process.env[key]) — never a bare static
+// `process.env.PAYLOAD_SECRET`. A static reference can be inlined/baked at BUILD
+// time by the bundler; if the var is absent in the build container it bakes in
+// as empty, and Payload then inits with an empty secret at runtime even though
+// the variable is set in the running process. Computed access can't be inlined,
+// so it always resolves against the live runtime environment.
+const env = (key: string): string | undefined => process.env[key]
+
 // ── Validate required env vars at startup (fail fast, not silently) ──────────
 const requiredEnvVars = ['PAYLOAD_SECRET', 'DATABASE_URI'] as const
 for (const key of requiredEnvVars) {
-  if (!process.env[key]) {
+  if (!env(key)) {
     throw new Error(
       `[payload.config] Missing required environment variable: ${key}. ` +
         `Set it in your Railway environment panel (or .env.local for local dev).`,
@@ -67,7 +76,9 @@ export default buildConfig({
   editor: lexicalEditor(),
 
   // PAYLOAD_SECRET is validated above — guaranteed to be a non-empty string here.
-  secret: process.env.PAYLOAD_SECRET!,
+  // Read via env() (computed access) so the value resolves at runtime, not baked
+  // at build time. This is the fix for "missing secret key" on Railway/standalone.
+  secret: env('PAYLOAD_SECRET')!,
 
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
@@ -75,7 +86,7 @@ export default buildConfig({
 
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI ?? '',
+      connectionString: env('DATABASE_URI') ?? '',
     },
     // push: true auto-creates tables on first run (safe for initial deploy)
     push: true,
