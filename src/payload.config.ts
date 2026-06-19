@@ -24,6 +24,17 @@ import { Navigation } from './payload/globals/Navigation'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+// ── Validate required env vars at startup (fail fast, not silently) ──────────
+const requiredEnvVars = ['PAYLOAD_SECRET', 'DATABASE_URI'] as const
+for (const key of requiredEnvVars) {
+  if (!process.env[key]) {
+    throw new Error(
+      `[payload.config] Missing required environment variable: ${key}. ` +
+        `Set it in your Railway environment panel (or .env.local for local dev).`,
+    )
+  }
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -55,8 +66,8 @@ export default buildConfig({
 
   editor: lexicalEditor(),
 
-  // Payload docs: pass the env var directly. If missing, Payload throws at startup — intentional.
-  secret: process.env.PAYLOAD_SECRET || '',
+  // PAYLOAD_SECRET is validated above — guaranteed to be a non-empty string here.
+  secret: process.env.PAYLOAD_SECRET!,
 
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
