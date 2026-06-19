@@ -367,7 +367,13 @@ export const Assets: CollectionConfig = {
           type: 'array',
           fields: [
             { name: 'source', type: 'text', required: true },
-            { name: 'seasonalReliability', type: 'select', options: [
+            { name: 'seasonalReliability', type: 'select',
+              // Shorten the generated Postgres enum name (the full path
+              // enum_assets_cattle_ranch_data_water_sources_seasonal_reliability
+              // is 64 chars and exceeds Postgres's 63-char identifier limit).
+              // dbName changes only the DB column/enum, not the API field key.
+              dbName: 'reliability',
+              options: [
               { label: 'Year-round', value: 'year-round' },
               { label: 'Seasonal', value: 'seasonal' },
             ]},
