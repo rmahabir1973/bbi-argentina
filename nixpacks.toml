@@ -1,7 +1,5 @@
 # nixpacks.toml — Railway build configuration for Next.js + Payload CMS
 # Explicitly controls how Railway builds and starts the application.
-# Without this file Railway auto-detects but can miss pnpm version pinning
-# and standalone server startup.
 
 [variables]
 NODE_ENV = "production"

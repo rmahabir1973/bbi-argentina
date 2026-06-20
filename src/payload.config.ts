@@ -87,8 +87,12 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: env('DATABASE_URI') ?? '',
+      // Prevent Railway cold-start DB timeout causing 502 on first request
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+      max: 5,
     },
-    // push: true auto-creates tables on first run (safe for initial deploy)
+    // push: true auto-creates/syncs tables on every startup (safe — idempotent)
     push: true,
   }),
 
