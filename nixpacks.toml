@@ -3,7 +3,6 @@
 
 [variables]
 NODE_ENV = "production"
-HOSTNAME = "0.0.0.0"
 
 [phases.install]
 cmds = ["pnpm install --frozen-lockfile"]
@@ -12,4 +11,6 @@ cmds = ["pnpm install --frozen-lockfile"]
 cmds = ["pnpm run build"]
 
 [start]
-cmd = "node .next/standalone/server.js"
+# HOSTNAME and PORT are passed by Railway at runtime via env vars.
+# next/standalone server.js reads process.env.PORT and HOSTNAME automatically.
+cmd = "HOSTNAME=0.0.0.0 node .next/standalone/server.js"
