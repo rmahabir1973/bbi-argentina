@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts next build && node -e \"const{cpSync,existsSync}=require('fs');cpSync('.next/static','.next/standalone/.next/static',{recursive:true});try{cpSync('public','.next/standalone/public',{recursive:true})}catch(e){};['sharp'].forEach(p=>{try{const s='node_modules/'+p,d='.next/standalone/node_modules/'+p;if(existsSync(s))cpSync(s,d,{recursive:true})}catch(e){}})\"",
-    "start": "node .next/standalone/server.js",
+    "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "lint": "next lint && eslint src --ext .ts,.tsx --max-warnings 0",
     "lint:content": "node scripts/content-lint.mjs",
     "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload",
