@@ -1,6 +1,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
+import sharp from 'sharp'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -45,6 +46,8 @@ for (const key of requiredEnvVars) {
 }
 
 export default buildConfig({
+  sharp,
+
   admin: {
     user: Users.slug,
     importMap: {

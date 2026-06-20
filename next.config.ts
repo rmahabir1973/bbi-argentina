@@ -4,6 +4,10 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   // Required for Railway/Docker: bundles only necessary files
   output: 'standalone',
+  // sharp is a native binary — tell Next.js to resolve it at runtime rather
+  // than attempting to bundle it. Works alongside the manual cpSync in the
+  // build script that copies sharp into .next/standalone/node_modules/.
+  serverExternalPackages: ['sharp'],
   experimental: {
     reactCompiler: false,
   },
