@@ -45,119 +45,133 @@ for (const key of requiredEnvVars) {
   }
 }
 
-export default buildConfig({
-  sharp,
+// ── Step 1: diagnostic wrapper — surfaces the real error if buildConfig throws ─
+// This replaces the bare `export default buildConfig({...})` so that if Payload
+// fails to initialise (e.g. DB connection error, missing schema, bad secret) the
+// real exception is printed to the deploy log before re-thrown.
+let _config: ReturnType<typeof buildConfig>
+try {
+  _config = buildConfig({
+    sharp,
 
-  admin: {
-    user: Users.slug,
-    importMap: {
-      baseDir: path.resolve(dirname),
+    admin: {
+      user: Users.slug,
+      importMap: {
+        baseDir: path.resolve(dirname),
+      },
+      meta: {
+        titleSuffix: ' — BBI Argentina CMS',
+      },
     },
-    meta: {
-      titleSuffix: ' — BBI Argentina CMS',
+
+    collections: [
+      Users,
+      Media,
+      Assets,
+      AssetClasses,
+      Provinces,
+      Articles,
+      FAQs,
+      ServicePages,
+      Inquiries,
+      Pages,
+    ],
+
+    globals: [
+      SiteSettings,
+      Navigation,
+    ],
+
+    editor: lexicalEditor(),
+
+    // PAYLOAD_SECRET is validated above — guaranteed to be a non-empty string here.
+    // Read via env() (computed access) so the value resolves at runtime, not baked
+    // at build time. This is the fix for "missing secret key" on Railway/standalone.
+    secret: env('PAYLOAD_SECRET')!,
+
+    typescript: {
+      outputFile: path.resolve(dirname, 'payload-types.ts'),
     },
-  },
 
-  collections: [
-    Users,
-    Media,
-    Assets,
-    AssetClasses,
-    Provinces,
-    Articles,
-    FAQs,
-    ServicePages,
-    Inquiries,
-    Pages,
-  ],
+    db: postgresAdapter({
+      pool: {
+        connectionString: env('DATABASE_URI') ?? '',
+        // Neon requires SSL — make it explicit so libpq doesn't warn/fail
+        ssl: { rejectUnauthorized: false },
+        // Prevent Railway cold-start DB timeout causing 502 on first request
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        max: 5,
+      },
+      // push: true auto-creates/syncs tables on every startup (safe — idempotent)
+      push: true,
+    }),
 
-  globals: [
-    SiteSettings,
-    Navigation,
-  ],
+    email: resendAdapter({
+      defaultFromAddress: process.env.RESEND_DEFAULT_FROM ?? 'noreply@bbiargentina.com',
+      defaultFromName: 'BBI Argentina',
+      apiKey: process.env.RESEND_API_KEY ?? '',
+    }),
 
-  editor: lexicalEditor(),
-
-  // PAYLOAD_SECRET is validated above — guaranteed to be a non-empty string here.
-  // Read via env() (computed access) so the value resolves at runtime, not baked
-  // at build time. This is the fix for "missing secret key" on Railway/standalone.
-  secret: env('PAYLOAD_SECRET')!,
-
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'),
-  },
-
-  db: postgresAdapter({
-    pool: {
-      connectionString: env('DATABASE_URI') ?? '',
-      // Prevent Railway cold-start DB timeout causing 502 on first request
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000,
-      max: 5,
-    },
-    // push: true auto-creates/syncs tables on every startup (safe — idempotent)
-    push: true,
-  }),
-
-  email: resendAdapter({
-    defaultFromAddress: process.env.RESEND_DEFAULT_FROM ?? 'noreply@bbiargentina.com',
-    defaultFromName: 'BBI Argentina',
-    apiKey: process.env.RESEND_API_KEY ?? '',
-  }),
-
-  plugins: [
-    s3Storage({
-      collections: {
-        media: {
-          prefix: 'media',
-          generateFileURL: ({ filename: fname }) => {
-            // Support both R2_PUBLIC_URL (Railway) and NEXT_PUBLIC_S3_HOSTNAME
-            const hostname =
-              process.env.R2_PUBLIC_URL ??
-              process.env.NEXT_PUBLIC_S3_HOSTNAME ??
-              ''
-            return hostname ? `${hostname}/media/${fname}` : `/media/${fname}`
+    plugins: [
+      s3Storage({
+        collections: {
+          media: {
+            prefix: 'media',
+            generateFileURL: ({ filename: fname }) => {
+              // Support both R2_PUBLIC_URL (Railway) and NEXT_PUBLIC_S3_HOSTNAME
+              const hostname =
+                process.env.R2_PUBLIC_URL ??
+                process.env.NEXT_PUBLIC_S3_HOSTNAME ??
+                ''
+              return hostname ? `${hostname}/media/${fname}` : `/media/${fname}`
+            },
           },
         },
-      },
-      // Support both R2_BUCKET_NAME (Railway) and S3_BUCKET
-      bucket: process.env.R2_BUCKET_NAME ?? process.env.S3_BUCKET ?? '',
-      config: {
-        forcePathStyle: true,
-        credentials: {
-          accessKeyId:
-            process.env.R2_ACCESS_KEY_ID ?? process.env.S3_ACCESS_KEY_ID ?? '',
-          secretAccessKey:
-            process.env.R2_SECRET_ACCESS_KEY ?? process.env.S3_SECRET_ACCESS_KEY ?? '',
+        // Support both R2_BUCKET_NAME (Railway) and S3_BUCKET
+        bucket: process.env.R2_BUCKET_NAME ?? process.env.S3_BUCKET ?? '',
+        config: {
+          forcePathStyle: true,
+          credentials: {
+            accessKeyId:
+              process.env.R2_ACCESS_KEY_ID ?? process.env.S3_ACCESS_KEY_ID ?? '',
+            secretAccessKey:
+              process.env.R2_SECRET_ACCESS_KEY ?? process.env.S3_SECRET_ACCESS_KEY ?? '',
+          },
+          region: process.env.S3_REGION ?? 'auto',
+          // Support both R2_ENDPOINT (Railway) and S3_ENDPOINT
+          endpoint: process.env.R2_ENDPOINT ?? process.env.S3_ENDPOINT ?? '',
         },
-        region: process.env.S3_REGION ?? 'auto',
-        // Support both R2_ENDPOINT (Railway) and S3_ENDPOINT
-        endpoint: process.env.R2_ENDPOINT ?? process.env.S3_ENDPOINT ?? '',
+      }),
+    ],
+
+    upload: {
+      limits: {
+        fileSize: 10_000_000, // 10MB max upload
       },
-    }),
-  ],
-
-  upload: {
-    limits: {
-      fileSize: 10_000_000, // 10MB max upload
     },
-  },
 
-  cors: [
-    // Support both NEXT_PUBLIC_SERVER_URL (Railway) and NEXT_PUBLIC_SITE_URL
-    process.env.NEXT_PUBLIC_SERVER_URL ??
+    cors: [
+      // Support both NEXT_PUBLIC_SERVER_URL (Railway) and NEXT_PUBLIC_SITE_URL
+      process.env.NEXT_PUBLIC_SERVER_URL ??
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        'http://localhost:3000',
+    ],
+
+    csrf: [
+      process.env.NEXT_PUBLIC_SERVER_URL ??
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        'http://localhost:3000',
+    ],
+
+    serverURL:
+      process.env.NEXT_PUBLIC_SERVER_URL ??
       process.env.NEXT_PUBLIC_SITE_URL ??
       'http://localhost:3000',
-  ],
+  })
+} catch (e) {
+  console.error('PAYLOAD BUILDCONFIG FAILED:', e)
+  throw e
+}
 
-  csrf: [
-    process.env.NEXT_PUBLIC_SERVER_URL ??
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      'http://localhost:3000',
-  ],
-
-  serverURL:
-    process.env.NEXT_PUBLIC_SERVER_URL ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    'http://localhost:3000',
-})
+export default _config
