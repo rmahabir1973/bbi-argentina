@@ -103,7 +103,10 @@ try {
         idleTimeoutMillis: 30000,
         max: 5,
       },
-      // push: true auto-creates/syncs tables on every startup (safe — idempotent)
+      // push: true — Drizzle diffs the schema on every boot and creates/alters
+      // tables as needed. On first boot against an empty Neon database this
+      // creates the entire Payload schema (users, media, collections, globals).
+      // Safe and idempotent — will not drop or truncate existing data.
       push: true,
     }),
 
