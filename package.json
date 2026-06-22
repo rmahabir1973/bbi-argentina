@@ -9,6 +9,7 @@
     "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "lint": "next lint && eslint src --ext .ts,.tsx --max-warnings 0",
     "lint:content": "node scripts/content-lint.mjs",
+    "migrate": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload migrate",
     "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload",
     "generate:types": "payload generate:types",
     "typecheck": "tsc --noEmit"

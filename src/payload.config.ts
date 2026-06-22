@@ -6,6 +6,9 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { resendAdapter } from '@payloadcms/email-resend'
+// Migrations — imported and passed to prodMigrations so Payload runs them
+// on startup in production (NODE_ENV=production) without needing a CLI step.
+import { migrations } from './migrations'
 // Collections
 import { Users } from './payload/collections/Users'
 import { Media } from './payload/collections/Media'
@@ -94,6 +97,16 @@ try {
     },
 
     db: postgresAdapter({
+      // push: false — push is dev-only (ignored when NODE_ENV=production).
+      // Schema creation/updates in production are handled by committed
+      // migrations run via prodMigrations at startup.
+      push: false,
+      // Migrations live in src/migrations/ (relative to this config file).
+      migrationDir: path.resolve(dirname, 'migrations'),
+      // prodMigrations: Payload runs these automatically on startup when
+      // NODE_ENV=production. This is the correct production migration path —
+      // no CLI step, no push, no manual intervention required post-deploy.
+      prodMigrations: migrations,
       pool: {
         connectionString: env('DATABASE_URI') ?? '',
         // Neon requires SSL — make it explicit so libpq doesn't warn/fail
@@ -103,11 +116,6 @@ try {
         idleTimeoutMillis: 30000,
         max: 5,
       },
-      // push: true — Drizzle diffs the schema on every boot and creates/alters
-      // tables as needed. On first boot against an empty Neon database this
-      // creates the entire Payload schema (users, media, collections, globals).
-      // Safe and idempotent — will not drop or truncate existing data.
-      push: true,
     }),
 
     email: resendAdapter({
